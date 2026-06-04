@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Legal — Teamtailor</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f0f13; --surface: #1a1a22; --surface2: #22222e;
+  --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.15);
+  --text: #f0f0f5; --text2: #9090a8; --text3: #5a5a72;
+  --purple: #7c6af7; --purple-light: #a89bf9; --purple-dim: rgba(124,106,247,0.15);
+  --green: #3ecf8e; --green-dim: rgba(62,207,142,0.12);
+  --red: #f66; --red-dim: rgba(255,102,102,0.12);
+  --amber: #f5a623; --amber-dim: rgba(245,166,35,0.12);
+  --radius: 12px; --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+.screen { display: none; min-height: 100vh; padding: 2rem 1rem; }
+.screen.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.screen.top { justify-content: flex-start; padding-top: 2rem; }
+.container { width: 100%; max-width: 560px; }
+.logo { text-align: center; margin-bottom: 2.5rem; }
+.logo-icon { font-size: 48px; display: block; margin-bottom: 12px; }
+.logo h1 { font-size: 26px; font-weight: 600; letter-spacing: -0.5px; }
+.logo p { font-size: 14px; color: var(--text2); margin-top: 6px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; }
+input[type=text], input[type=password] {
+  width: 100%; padding: 12px 16px; background: var(--bg); border: 1px solid var(--border2);
+  border-radius: var(--radius-sm); color: var(--text); font-family: 'DM Sans', sans-serif;
+  font-size: 15px; outline: none; transition: border-color 0.2s;
+}
+input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px var(--purple-dim); }
+.btn-primary { display: block; width: 100%; padding: 14px; margin-top: 12px; background: var(--purple); color: #fff; border: none; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: background 0.15s; }
+.btn-primary:hover { background: var(--purple-light); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-ghost { display: inline-block; padding: 8px 16px; background: transparent; color: var(--text2); border: 1px solid var(--border2); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; }
+.btn-ghost:hover { background: var(--surface2); color: var(--text); }
+.btn-danger { display: inline-block; padding: 8px 16px; background: var(--red-dim); color: var(--red); border: 1px solid rgba(255,102,102,0.2); border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; }
+.btn-danger:hover { background: rgba(255,102,102,0.2); }
+.section-label { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+.center { text-align: center; }
+.q-badge-el { font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 99px; }
+.badge-multi { background: var(--purple-dim); color: var(--purple-light); }
+.badge-bonus { background: var(--amber-dim); color: var(--amber); }
+.progress-dots { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 16px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--surface2); flex-shrink: 0; }
+.dot.done { background: var(--purple); }
+.dot.current { background: var(--amber); }
+.q-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-bottom: 1rem; }
+.q-text { font-size: 15px; line-height: 1.6; font-weight: 500; }
+.answer-btn { width: 100%; text-align: left; padding: 13px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer; transition: all 0.15s; margin-bottom: 8px; display: flex; align-items: flex-start; gap: 12px; }
+.answer-btn:hover:not(:disabled) { border-color: var(--border2); background: var(--surface2); }
+.answer-btn.selected { border-color: var(--purple); background: var(--purple-dim); color: var(--purple-light); }
+.answer-btn.correct { border-color: var(--green); background: var(--green-dim); color: var(--green); }
+.answer-btn.wrong { border-color: var(--red); background: var(--red-dim); color: var(--red); }
+.answer-btn:disabled { cursor: default; }
+.answer-letter { width: 26px; height: 26px; border-radius: 6px; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; font-family: 'DM Mono', monospace; }
+.expl-box { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; margin-top: 12px; font-size: 13px; color: var(--text2); line-height: 1.5; display: none; }
+.btn-next { background: var(--purple); color: #fff; border: none; width: 100%; margin-top: 12px; padding: 13px; border-radius: var(--radius-sm); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; display: none; transition: background 0.15s; }
+.btn-next:hover { background: var(--purple-light); }
+.podium { display: flex; align-items: flex-end; justify-content: center; gap: 12px; margin: 1.5rem 0 2rem; }
+.podium-block { text-align: center; }
+.podium-bar { border-radius: 8px 8px 0 0; width: 100px; display: flex; align-items: flex-start; justify-content: center; padding-top: 12px; font-size: 28px; }
+.podium-name { font-size: 13px; font-weight: 500; margin-top: 8px; }
+.podium-score { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.rank-row { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: var(--radius-sm); margin-bottom: 6px; background: var(--surface); border: 1px solid var(--border); }
+.rank-num { font-size: 12px; font-family: 'DM Mono', monospace; color: var(--text3); width: 20px; }
+.rank-bar-wrap { flex: 1; height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; max-width: 80px; }
+.rank-bar { height: 100%; border-radius: 2px; }
+.me-highlight { border-color: var(--purple) !important; }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; }
+.stat-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.stat-val { font-size: 24px; font-weight: 600; }
+.player-pill { display: inline-block; padding: 5px 12px; background: var(--surface2); border-radius: 99px; font-size: 13px; margin: 3px; }
+.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border2); border-top-color: var(--purple); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="screen-home" class="screen active">
+  <div class="container">
+    <div class="logo">
+      <span class="logo-icon">⚖️</span>
+      <h1>Quiz Legal & Contrats</h1>
+      <p>Gestion des objections contractuelles — Teamtailor</p>
+    </div>
+    <div class="card">
+      <div class="section-label">Ton prénom</div>
+      <input type="text" id="name-input" placeholder="Entre ton prénom…" maxlength="20" onkeydown="if(event.key==='Enter')joinQuiz()" autofocus />
+      <button class="btn-primary" onclick="joinQuiz()">Commencer le quiz →</button>
+    </div>
+    <div class="center" style="margin-top:1rem;">
+      <button class="btn-ghost" onclick="showScreen('screen-admin-login')">🔧 Vue animateur</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN LOGIN -->
+<div id="screen-admin-login" class="screen">
+  <div class="container" style="max-width:380px;">
+    <div class="logo">
+      <span class="logo-icon">🔧</span>
+      <h1 style="font-size:20px;">Accès animateur</h1>
+    </div>
+    <div class="card">
+      <div class="section-label">Code animateur</div>
+      <input type="password" id="admin-pwd" placeholder="Code…" onkeydown="if(event.key==='Enter')checkAdmin()" />
+      <p id="admin-error" style="font-size:12px;color:var(--red);margin-top:8px;display:none;">Code incorrect</p>
+      <button class="btn-primary" onclick="checkAdmin()">Accéder →</button>
+      <button class="btn-ghost" style="width:100%;margin-top:8px;" onclick="showScreen('screen-home')">← Retour</button>
+    </div>
+    <p style="font-size:12px;color:var(--text3);text-align:center;margin-top:12px;">Code par défaut : <span style="font-family:'DM Mono',monospace;color:var(--text2);">admin123</span></p>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="screen-admin" class="screen top">
+  <div class="container">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.5rem;">
+      <button class="btn-ghost" onclick="showScreen('screen-home')">← Retour</button>
+      <h2 style="font-size:17px;font-weight:600;">Tableau de bord animateur</h2>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-label">Participants</div><div class="stat-val" id="admin-count">—</div></div>
+      <div class="stat-card"><div class="stat-label">Score moyen</div><div class="stat-val" id="admin-avg">—</div></div>
+    </div>
+    <div class="card" style="margin-bottom:12px;">
+      <div class="section-label" style="margin-bottom:12px;">Classement live</div>
+      <div id="admin-list"><span class="spinner"></span> Chargement…</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn-ghost" onclick="loadAdmin()">🔄 Actualiser</button>
+      <button class="btn-danger" onclick="resetAll()">🗑 Réinitialiser tous les scores</button>
+    </div>
+    <div class="card" style="margin-top:12px;">
+      <div class="section-label">Paramètres quiz</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:8px;">
+        <label style="font-size:13px;color:var(--text2);min-width:140px;">Questions bonus</label>
+        <input type="checkbox" id="include-bonus" checked />
+        <label style="font-size:13px;" for="include-bonus">Inclure les 3 bonus</label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WAITING -->
+<div id="screen-waiting" class="screen">
+  <div class="container center">
+    <div style="font-size:48px;margin-bottom:16px;">👋</div>
+    <p style="font-size:14px;color:var(--text2);margin-bottom:6px;">Bienvenue,</p>
+    <p style="font-size:28px;font-weight:600;color:var(--purple-light);" id="waiting-name-display"></p>
+    <p style="font-size:14px;color:var(--text2);margin-top:8px;margin-bottom:1.5rem;">Prêt(e) à commencer ?</p>
+    <div class="card" style="margin-bottom:1rem;text-align:left;">
+      <div class="section-label">Déjà participé</div>
+      <div id="waiting-players" style="margin-top:8px;"></div>
+    </div>
+    <button class="btn-primary" onclick="startMyQuiz()">Lancer le quiz →</button>
+  </div>
+</div>
+
+<!-- QUESTION -->
+<div id="screen-question" class="screen top">
+  <div class="container">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <span style="font-size:12px;font-weight:500;color:var(--text2);font-family:'DM Mono',monospace;" id="q-counter"></span>
+      <span id="q-badge-wrap"></span>
+    </div>
+    <div class="progress-dots" id="progress-dots"></div>
+    <div class="q-card"><p class="q-text" id="q-text"></p></div>
+    <div id="answers-container"></div>
+    <div class="expl-box" id="expl-box"></div>
+    <button class="btn-next" id="next-btn">Suivant →</button>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div id="screen-results" class="screen top">
+  <div class="container">
+    <div class="center" style="margin-bottom:1.5rem;">
+      <div style="font-size:36px;margin-bottom:8px;">🏆</div>
+      <h2 style="font-size:20px;font-weight:600;">Résultats finaux</h2>
+      <p style="font-size:13px;color:var(--text2);margin-top:4px;" id="results-subtitle"></p>
+    </div>
+    <div id="results-loading" style="text-align:center;padding:2rem;color:var(--text2);font-size:14px;">
+      <span class="spinner"></span> Chargement du classement…
+    </div>
+    <div id="results-content" style="display:none;">
+      <div class="podium" id="podium"></div>
+      <div class="section-label">Classement complet</div>
+      <div id="full-ranking"></div>
+    </div>
+    <div class="center" style="margin-top:1.5rem;">
+      <button class="btn-primary" style="max-width:300px;" onclick="showScreen('screen-home')">← Accueil</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var API_URL = '/api';
+var ADMIN_CODE = 'admin123';
+
+var QUESTIONS = [
+  { q: "Un prospect dit : \"Votre contrat n'est pas adapté à notre organisation.\" Quelle est la meilleure réaction ?", opts: ["Proposer d'envoyer le contrat à Legal pour qu'ils le réécrivent","Expliquer que le contrat est volontairement standardisé car Teamtailor est un SaaS","Demander si le sujet est une vraie contrainte légale ou une préférence de formulation","Dire que toutes les entreprises ont le même contrat donc il n'y aura aucun échange possible"], correct:[1,2], multi:true, expl:"Le contrat SaaS est standardisé par nature (B), et il faut qualifier si c'est une vraie contrainte ou une préférence (C)." },
+  { q: "Le client renvoie un contrat avec 50 commentaires. Que dois-tu faire ?", opts:["Tout transmettre à Legal tel quel","Demander au client de prioriser les 3 points réellement bloquants","Expliquer que trop de commentaires peut réduire la réceptivité de Legal","Accepter les petits commentaires pour montrer de la flexibilité"], correct:[1,2], multi:true, expl:"Prioriser les vrais blocages (B) et expliquer l'impact sur Legal (C)." },
+  { q: "Le client veut que Teamtailor soit responsable du traitement RGPD. Quelle réponse est correcte ?", opts:["C'est négociable si le deal est stratégique","Impossible : le client définit les finalités et moyens du traitement","Teamtailor est sous-traitant","Le contrat peut changer cette répartition si les deux parties sont d'accord"], correct:[1,2], multi:true, expl:"Le client est responsable du traitement (B), Teamtailor est sous-traitant (C). Non négociable." },
+  { q: "Le client demande à modifier le DPA. Quelle est la bonne posture ?", opts:["Dire que le DPA est complet et que sa structure ne change pas","Proposer directement une réunion avec Legal","Envoyer la documentation sécurité pour rassurer","Comprendre si la demande est une vraie exigence légale ou un besoin de réassurance"], correct:[0,2,3], multi:true, expl:"DPA stable (A), doc sécurité rassure (C), qualifier le besoin (D)." },
+  { q: "Le client demande un délai de résolution garanti. Quelle réponse est la plus juste ?", opts:["On peut garantir une résolution sous 36h ouvrées","On ne garantit pas de délai ferme car la résolution peut dépendre de facteurs externes","On peut montrer l'historique d'uptime et la page status","En repli, on peut évoquer du 'best efforts' indicatif"], correct:[1,2,3], multi:true, expl:"Pas de délai ferme (B), uptime historique (C), best efforts (D)." },
+  { q: "Pourquoi Teamtailor refuse les pénalités en cas de non-respect des délais ?", opts:["Parce que c'est incompatible avec un modèle SaaS standard","Parce que Salesforce et Workday fonctionnent aussi généralement sans pénalités activées en pratique","Parce que les pénalités accélèrent rarement la résolution d'un incident","Parce que Teamtailor ne veut prendre aucun engagement"], correct:[0,1,2], multi:true, expl:"Incompatibilité SaaS (A), pratique marché (B), inefficacité des pénalités (C)." },
+  { q: "Le client demande des service credits en cas de downtime. Quelle est la meilleure réponse ?", opts:["Les accepter si le client signe rapidement","Expliquer que Teamtailor privilégie transparence et réactivité","Expliquer que les service credits peuvent créer une double compensation avec la limitation de responsabilité","Dire que les service credits ne règlent pas l'incident plus vite"], correct:[1,2,3], multi:true, expl:"Transparence (B), risque double compensation (C), inefficacité des credits (D)." },
+  { q: "Le client demande une responsabilité illimitée et l'inclusion des pertes indirectes. Que dois-tu défendre ?", opts:["Un plafond de responsabilité proportionnel aux frais payés","L'exclusion des pertes indirectes","Une responsabilité illimitée uniquement pour les grands comptes","Le fait que les pertes indirectes sont difficiles à évaluer et potentiellement illimitées"], correct:[0,1,3], multi:true, expl:"Plafond proportionnel (A), exclusion pertes indirectes (B), difficiles à évaluer (D)." },
+  { q: "Le client veut figer les fonctionnalités et inclure la roadmap dans le contrat. Quelle réponse est correcte ?", opts:["Impossible : le SaaS évolue en continu","On peut s'engager à ne pas dégrader les fonctionnalités clés","On peut contractualiser toute la roadmap si le client est stratégique","La roadmap est par nature non contractualisable"], correct:[0,1,3], multi:true, expl:"SaaS en continu (A), non-dégradation possible (B), roadmap non contractualisable (D)." },
+  { q: "Le client veut que Teamtailor garantisse ses intégrations. Quelle distinction dois-tu faire ?", opts:["Teamtailor peut garantir la disponibilité de tous les outils tiers","Teamtailor peut garantir la compatibilité côté produit","Teamtailor ne contrôle pas les services tiers","Si l'intégration est critique, il faut traiter le sujet côté produit plutôt que contractuel"], correct:[1,2,3], multi:true, expl:"Compatibilité produit (B), pas les tiers (C), sujet critique côté produit (D)." },
+  { q: "Le client refuse l'auto-renouvellement. Quel argument est valable ?", opts:["C'est illégal de le refuser","L'auto-renouvellement protège la continuité de service","Les conditions sont communiquées 60 jours avant","Cela évite les interruptions involontaires"], correct:[1,2,3], multi:true, expl:"Continuité (B), préavis 60j (C), évite les interruptions (D)." },
+  { q: "Le client veut payer mensuellement. Quelle est la bonne posture ?", opts:["Accepter si cela permet de closer","Expliquer que le paiement annuel fait partie du modèle qui permet de garder des prix compétitifs","Dire que le mensuel / usage-based est hors modèle","Si c'est bloquant, escalader plutôt que décider seul"], correct:[1,2,3], multi:true, expl:"Expliquer le modèle (B), mensuel hors modèle (C), escalader si bloquant (D)." },
+  { q: "BONUS — Un client dit : \"Notre Legal refuse votre contrat standard, il faut partir de notre template.\" Quelle est la meilleure réponse ?", opts:["\"Oui, envoyez-nous votre template.\"","\"Notre modèle SaaS repose sur un contrat standardisé. Pouvez-vous identifier les 3 points réellement bloquants côté Legal ?\"","\"Notre Legal refuse systématiquement les templates clients.\"","\"C'est impossible, donc le projet est bloqué.\""], correct:[1], multi:false, bonus:true, expl:"Recentrer sur les vrais blocages, ni accepter le template ni bloquer." },
+  { q: "BONUS — Le client dit : \"Nous voulons modifier le DPA car notre DPO a des inquiétudes.\" Quelle est la meilleure réponse ?", opts:["\"Pas de problème, envoyez les modifications.\"","\"Le DPA est complet et non modifiable. Je peux vous envoyer la documentation sécurité pour répondre aux inquiétudes du DPO.\"","\"Le DPO n'a pas compris le RGPD.\"","\"On peut faire une exception si vous signez ce mois-ci.\""], correct:[1], multi:false, bonus:true, expl:"Structure non modifiable + doc sécurité. Pas d'exception." },
+  { q: "BONUS — Le client dit : \"Sans pénalités SLA, nous ne pouvons pas avancer.\" Quelle est la bonne réaction ?", opts:["Accepter les pénalités pour sauver le deal","Demander si des pénalités ont déjà été activées chez leurs autres fournisseurs SaaS","Recentrer sur uptime, transparence, réactivité et page status","Escalader si c'est réellement bloquant"], correct:[1,2,3], multi:true, bonus:true, expl:"Qualifier avec autres fournisseurs (B), montrer valeur réelle (C), escalader si bloquant (D)." }
+];
+
+var state = { playerName:'', currentQ:0, score:0, questions:[], selectedAnswers:[], answered:false };
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+}
+
+function apiCall(params) {
+  return fetch('/api?' + new URLSearchParams(params).toString())
+    .then(function(r) { return r.json(); })
+    .catch(function(e) { console.warn('API error', e); return null; });
+}
+
+function saveScore(name, score, total) { return apiCall({ action:'save', name:name, score:score, total:total }); }
+function fetchScores() { return apiCall({ action:'scores' }).then(function(d) { return d ? d.players || [] : []; }); }
+function resetScores() { return apiCall({ action:'reset', code:ADMIN_CODE }); }
+
+function joinQuiz() {
+  var name = document.getElementById('name-input').value.trim();
+  if (!name) { document.getElementById('name-input').focus(); return; }
+  state.playerName = name;
+  state.currentQ = 0; state.score = 0;
+  document.getElementById('waiting-name-display').textContent = name;
+  fetchScores().then(function(players) {
+    var pl = document.getElementById('waiting-players');
+    pl.innerHTML = players.length ? players.map(function(p) { return '<span class="player-pill">' + p.name + '</span>'; }).join('') : '<p style="font-size:13px;color:var(--text2);">Sois le premier !</p>';
+  });
+  showScreen('screen-waiting');
+}
+
+function startMyQuiz() {
+  var bonus = document.getElementById('include-bonus') ? document.getElementById('include-bonus').checked : true;
+  state.questions = bonus ? QUESTIONS : QUESTIONS.slice(0, 12);
+  showQuestion(0);
+}
+
+function showQuestion(idx) {
+  state.currentQ = idx; state.answered = false; state.selectedAnswers = [];
+  var q = state.questions[idx];
+  document.getElementById('q-counter').textContent = 'Q' + (idx+1) + ' / ' + state.questions.length;
+  var bw = document.getElementById('q-badge-wrap');
+  bw.innerHTML = q.bonus ? '<span class="q-badge-el badge-bonus">Bonus</span>' : q.multi ? '<span class="q-badge-el badge-multi">Plusieurs réponses possibles</span>' : '';
+  document.getElementById('q-text').textContent = q.q;
+  var letters = ['A','B','C','D'];
+  var ac = document.getElementById('answers-container'); ac.innerHTML = '';
+  q.opts.forEach(function(opt, i) {
+    var btn = document.createElement('button');
+    btn.className = 'answer-btn'; btn.dataset.idx = i;
+    btn.innerHTML = '<span class="answer-letter">' + letters[i] + '</span><span style="line-height:1.4;">' + opt + '</span>';
+    btn.onclick = function() { selectAnswer(i); };
+    ac.appendChild(btn);
+  });
+  document.getElementById('expl-box').style.display = 'none';
+  var nb = document.getElementById('next-btn'); nb.style.display = 'none'; nb.onclick = null;
+  var dots = document.getElementById('progress-dots'); dots.innerHTML = '';
+  state.questions.forEach(function(_, i) {
+    var d = document.createElement('div');
+    d.className = 'dot' + (i < idx ? ' done' : i === idx ? ' current' : '');
+    dots.appendChild(d);
+  });
+  showScreen('screen-question');
+}
+
+function selectAnswer(idx) {
+  if (state.answered) return;
+  var q = state.questions[state.currentQ];
+  if (!q.multi) {
+    state.selectedAnswers = [idx];
+    document.querySelectorAll('.answer-btn').forEach(function(b) { b.classList.remove('selected'); });
+    document.querySelectorAll('.answer-btn')[idx].classList.add('selected');
+    confirmAnswer();
+  } else {
+    var pos = state.selectedAnswers.indexOf(idx);
+    if (pos === -1) state.selectedAnswers.push(idx); else state.selectedAnswers.splice(pos, 1);
+    document.querySelectorAll('.answer-btn').forEach(function(b) {
+      b.classList.toggle('selected', state.selectedAnswers.indexOf(parseInt(b.dataset.idx)) !== -1);
+    });
+    var nb = document.getElementById('next-btn');
+    nb.style.display = 'block'; nb.textContent = 'Valider →'; nb.onclick = confirmAnswer;
+  }
+}
+
+function confirmAnswer() {
+  if (state.answered) return;
+  state.answered = true;
+  var q = state.questions[state.currentQ];
+  var sel = state.selectedAnswers.slice().sort().join(',');
+  var cor = q.correct.slice().sort().join(',');
+  var ok = sel === cor;
+  if (ok) state.score++;
+  document.querySelectorAll('.answer-btn').forEach(function(b, i) {
+    b.disabled = true;
+    if (q.correct.indexOf(i) !== -1) { b.classList.remove('selected'); b.classList.add('correct'); }
+    else if (state.selectedAnswers.indexOf(i) !== -1) { b.classList.remove('selected'); b.classList.add('wrong'); }
+  });
+  var eb = document.getElementById('expl-box');
+  eb.innerHTML = (ok ? '✅ ' : '❌ ') + q.expl; eb.style.display = 'block';
+  var nb = document.getElementById('next-btn');
+  nb.style.display = 'block';
+  nb.textContent = state.currentQ < state.questions.length - 1 ? 'Question suivante →' : 'Voir les résultats →';
+  nb.onclick = nextQuestion;
+}
+
+function nextQuestion() {
+  var next = state.currentQ + 1;
+  if (next < state.questions.length) { showQuestion(next); } else { showResults(); }
+}
+
+function showResults() {
+  document.getElementById('results-loading').style.display = 'block';
+  document.getElementById('results-content').style.display = 'none';
+  document.getElementById('results-subtitle').textContent = state.playerName + ' — ' + state.score + '/' + state.questions.length + ' bonne' + (state.score > 1 ? 's' : '') + ' réponse' + (state.score > 1 ? 's' : '');
+  showScreen('screen-results');
+  saveScore(state.playerName, state.score, state.questions.length).then(function() {
+    return fetchScores();
+  }).then(function(players) {
+    renderResults(players);
+  });
+}
+
+function renderResults(players) {
+  document.getElementById('results-loading').style.display = 'none';
+  document.getElementById('results-content').style.display = 'block';
+  var top3 = players.slice(0, 3);
+  var order = top3.length >= 2 ? [top3[1], top3[0], top3[2]].filter(Boolean) : top3;
+  var heights = top3.length >= 2 ? [110, 150, 80] : [150, 110, 80];
+  var colors = ['#4a4470','#7c6af7','#3b3060'];
+  var medals = ['🥈','🥇','🥉'];
+  document.getElementById('podium').innerHTML = order.map(function(p, i) {
+    return '<div class="podium-block"><div class="podium-bar" style="height:' + heights[i] + 'px;background:' + colors[i] + ';">' + medals[i] + '</div><div class="podium-name">' + p.name + '</div><div class="podium-score">' + p.score + '/' + p.total + '</div></div>';
+  }).join('');
+  var rankEl = document.getElementById('full-ranking'); rankEl.innerHTML = '';
+  players.forEach(function(p, i) {
+    var isMe = p.name === state.playerName;
+    var pct = Math.round((p.score / p.total) * 100);
+    var barColor = pct >= 83 ? 'var(--green)' : pct >= 58 ? 'var(--purple)' : 'var(--red)';
+    rankEl.innerHTML += '<div class="rank-row' + (isMe ? ' me-highlight' : '') + '"><span class="rank-num">#' + (i+1) + '</span><span style="flex:1;font-size:14px;font-weight:' + (isMe?600:400) + ';">' + p.name + (isMe ? ' <span style="font-size:11px;color:var(--purple-light);">(toi)</span>' : '') + '</span><div class="rank-bar-wrap"><div class="rank-bar" style="width:' + pct + '%;background:' + barColor + ';"></div></div><span style="font-size:13px;color:var(--text2);min-width:40px;text-align:right;">' + p.score + '/' + p.total + '</span></div>';
+  });
+}
+
+function checkAdmin() {
+  if (document.getElementById('admin-pwd').value === ADMIN_CODE) {
+    document.getElementById('admin-error').style.display = 'none';
+    document.getElementById('admin-pwd').value = '';
+    loadAdmin(); showScreen('screen-admin');
+  } else { document.getElementById('admin-error').style.display = 'block'; }
+}
+
+function loadAdmin() {
+  document.getElementById('admin-list').innerHTML = '<span class="spinner"></span> Chargement…';
+  fetchScores().then(function(players) {
+    document.getElementById('admin-count').textContent = players.length;
+    var avg = players.length ? Math.round(players.reduce(function(s,p) { return s + (p.score/p.total*100); }, 0) / players.length) + '%' : '—';
+    document.getElementById('admin-avg').textContent = avg;
+    if (!players.length) { document.getElementById('admin-list').innerHTML = '<p style="font-size:13px;color:var(--text2);">Aucun participant pour l\'instant.</p>'; return; }
+    document.getElementById('admin-list').innerHTML = players.map(function(p, i) {
+      var pct = Math.round((p.score/p.total)*100);
+      var barColor = pct>=83?'var(--green)':pct>=58?'var(--purple)':'var(--red)';
+      return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><span class="rank-num">#'+(i+1)+'</span><span style="flex:1;font-size:14px;">'+p.name+'</span><div class="rank-bar-wrap"><div class="rank-bar" style="width:'+pct+'%;background:'+barColor+';"></div></div><span style="font-size:13px;color:var(--text2);min-width:40px;text-align:right;">'+p.score+'/'+p.total+'</span></div>';
+    }).join('');
+  });
+}
+
+function resetAll() {
+  if (!confirm('Effacer tous les scores ? Cette action est irréversible.')) return;
+  resetScores().then(function(res) {
+    if (res && res.status === 'reset_ok') { alert('Scores réinitialisés ✓'); loadAdmin(); }
+    else { alert('Erreur lors du reset.'); }
+  });
+}
+</script>
+</body>
+</html>
