@@ -202,7 +202,7 @@ input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px var(--purple-di
 </div>
 
 <script>
-var API_URL = '/api';
+var API_URL = 'https://script.google.com/macros/s/AKfycbzbJ3l7z2MBX-uJwsnZidqz0d1ExZyEvtZ8KdUCPm_rMIfx_hRnoJE4wjEt08EQu8BM1A/exec';
 var ADMIN_CODE = 'admin123';
 
 var QUESTIONS = [
@@ -231,9 +231,18 @@ function showScreen(id) {
 }
 
 function apiCall(params) {
-  return fetch('/api?' + new URLSearchParams(params).toString())
-    .then(function(r) { return r.json(); })
-    .catch(function(e) { console.warn('API error', e); return null; });
+  return new Promise(function(resolve) {
+    var cbName = 'cb_' + Math.random().toString(36).slice(2);
+    params.callback = cbName;
+    var url = API_URL + '?' + new URLSearchParams(params).toString();
+    var script = document.createElement('script');
+    var timer = setTimeout(function() { cleanup(); resolve(null); }, 8000);
+    function cleanup() { clearTimeout(timer); delete window[cbName]; if (script.parentNode) script.parentNode.removeChild(script); }
+    window[cbName] = function(data) { cleanup(); resolve(data); };
+    script.onerror = function() { cleanup(); resolve(null); };
+    script.src = url;
+    document.head.appendChild(script);
+  });
 }
 
 function saveScore(name, score, total) { return apiCall({ action:'save', name:name, score:score, total:total }); }
